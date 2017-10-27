@@ -40,7 +40,7 @@ file(
     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include/sodium
     )
 
-include_directories( ${Boost_INCLUDE_DIR} )
+include_directories( ${CMAKE_SOURCE_DIR} ${Boost_INCLUDE_DIR} )
 
 set( ALL_SOURCES ${SODIUM_INCLUDE_FILES} ${SODIUM_SOURCE_FILES} )
 
@@ -48,6 +48,11 @@ add_library( sodium SHARED ${ALL_SOURCES} )
 add_library( libsodium STATIC ${ALL_SOURCES} )
 
 set_target_properties( libsodium PROPERTIES OUTPUT_NAME sodium )
+
+# Testing
+
+enable_testing()
+add_subdirectory(tests)
 
 # INSTALL
 # -------
