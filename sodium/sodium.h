@@ -994,7 +994,6 @@ namespace sodium {
             stream<typename std::result_of<Fn(A,B,C)>::type> snapshot(
                 const cell<B>& bc, const cell<C>& cc, const Fn& f) const
             {
-                typedef typename std::result_of<Fn(A,B,C)>::type D;
                 return snapshot(bc, [cc, f] (const A& a, const B& b) {
                     return f(a, b, cc.sample());
                 });
@@ -1005,7 +1004,6 @@ namespace sodium {
                 const cell<B>& bc, const cell<C>& cc, const cell<D>& cd,
                 const Fn& f) const
             {
-                typedef typename std::result_of<Fn(A,B,C,D)>::type E;
                 return snapshot(bc, [cc, cd, f] (const A& a, const B& b) {
                     return f(a, b, cc.sample(), cd.sample());
                 });
@@ -1016,7 +1014,6 @@ namespace sodium {
                 const cell<B>& bc, const cell<C>& cc, const cell<D>& cd, const cell<E>& ce,
                 const Fn& f) const
             {
-                typedef typename std::result_of<Fn(A,B,C,D,E)>::type F;
                 return snapshot(bc, [cc, cd, ce, f] (const A& a, const B& b) {
                     return f(a, b, cc.sample(), cd.sample(), ce.sample());
                 });
@@ -1027,7 +1024,6 @@ namespace sodium {
                 const cell<B>& bc, const cell<C>& cc, const cell<D>& cd, const cell<E>& ce, const cell<F>& cf,
                 const Fn& f) const
             {
-                typedef typename std::result_of<Fn(A,B,C,D,E,F)>::type G;
                 return snapshot(bc, [cc, cd, ce, cf, f] (const A& a, const B& b) {
                     return f(a, b, cc.sample(), cd.sample(), ce.sample(), cf.sample());
                 });
