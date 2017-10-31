@@ -4,11 +4,9 @@
  *
  * C++ implementation courtesy of International Telematics Ltd.
  */
-#include <sodium/sodium.h>
 
-using namespace std;
-using namespace boost;
-
+#ifndef _SODIUM_IMPL_H_
+#define _SODIUM_IMPL_H_
 
 namespace sodium {
 
@@ -47,7 +45,7 @@ namespace sodium {
 
         #define KILL_ONCE(ppKill) \
             do { \
-                function<void()>* pKill = *ppKill; \
+                std::function<void()>* pKill = *ppKill; \
                 if (pKill != NULL) { \
                     *ppKill = NULL; \
                     (*pKill)(); \
@@ -57,7 +55,7 @@ namespace sodium {
 
         stream_ stream_::once_(transaction_impl* trans1) const
         {
-            SODIUM_SHARED_PTR<function<void()>*> ppKill(new function<void()>*(NULL));
+            SODIUM_SHARED_PTR<std::function<void()>*> ppKill(new std::function<void()>*(NULL));
 
             SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
             *ppKill = listen_raw(trans1, SODIUM_TUPLE_GET<1>(p),
@@ -122,7 +120,7 @@ namespace sodium {
                             });
                         }
                         else
-                            pState->oValue = make_optional(combine(pState->oValue.get(), ptr));
+                            pState->oValue = boost::make_optional(combine(pState->oValue.get(), ptr));
                     }), false);
             return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill);
         }
@@ -337,7 +335,7 @@ namespace sodium {
                         }
                     })
                 , false);
-            return static_pointer_cast<cell_impl, cell_impl_concrete<cell_state_lazy>>(impl);
+            return std::static_pointer_cast<cell_impl, cell_impl_concrete<cell_state_lazy>>(impl);
         }
 
         cell_::cell_()
@@ -510,7 +508,7 @@ namespace sodium {
         {
             SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = unsafe_new_stream();
             const SODIUM_SHARED_PTR<impl::node>& target1 = SODIUM_TUPLE_GET<1>(p);
-            std::shared_ptr<function<void()>*> pKillInner(new function<void()>*(NULL));
+            std::shared_ptr<std::function<void()>*> pKillInner(new std::function<void()>*(NULL));
             trans0->prioritized(target1, [pKillInner, bea, target1] (transaction_impl* trans) {
                 if (*pKillInner == NULL)
                     *pKillInner = bea.impl->sample().cast_ptr<stream_>(NULL)->listen_raw(trans, target1, NULL, false);
@@ -537,7 +535,7 @@ namespace sodium {
         cell_ switch_c(transaction_impl* trans0, const cell_& bba)
         {
             auto za = [bba] () -> light_ptr { return bba.impl->sample().cast_ptr<cell_>(NULL)->impl->sample(); };
-            SODIUM_SHARED_PTR<function<void()>*> pKillInner(new function<void()>*(NULL));
+            SODIUM_SHARED_PTR<std::function<void()>*> pKillInner(new std::function<void()>*(NULL));
             SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = unsafe_new_stream();
             auto out_target = SODIUM_TUPLE_GET<1>(p);
             auto killOuter =
@@ -576,5 +574,7 @@ namespace sodium {
             return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill);
         }
 
-    };  // end namespace impl
-};  // end namespace sodium
+    }  // namespace impl
+}  // namespace sodium
+
+#endif // _SODIUM_IMPL_H_
