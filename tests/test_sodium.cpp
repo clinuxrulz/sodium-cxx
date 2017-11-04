@@ -911,7 +911,6 @@ void test_sodium::detach_sink()
 void test_sodium::move_semantics()
 {
     cell<unique_ptr<int>> pointer(unique_ptr<int>(new int(625)));
-    int v = 0;
     auto value = pointer.map([&](const unique_ptr<int>& pInt) {
         return pInt ? *pInt : 0;
     });
