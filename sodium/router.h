@@ -8,9 +8,9 @@
 
 namespace sodium {
     namespace impl {
-        template <typename Selector>
+        template <typename A, typename Selector>
         struct routing_table {
-            routing_table(const impl::stream_& stream_, SODIUM_SHARED_PTR<impl::node> node_)
+            routing_table(const impl::stream_<A>& stream_, SODIUM_SHARED_PTR<impl::node> node_)
             : node(node_),
               kill(NULL)
             {}
@@ -27,7 +27,7 @@ namespace sodium {
 
         template <typename A, typename Selector>
         struct router_impl {
-            SODIUM_SHARED_PTR<routing_table<Selector>> table;
+            SODIUM_SHARED_PTR<routing_table<A,Selector>> table;
             std::vector<std::tuple<stream_loop<A>, Selector>> queued;
         };
     }
@@ -73,11 +73,11 @@ namespace sodium {
             router(stream<A> in, std::function<Selector(const A&)> f)
             : impl(new impl::router_impl<A, Selector>)
             {
-                SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
+                SODIUM_TUPLE<impl::stream_<A>,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream<A>();
                 auto stream = std::get<0>(p);
                 auto target = std::get<1>(p);
                 transaction trans1;
-                impl->table = SODIUM_SHARED_PTR<impl::routing_table<Selector>>(new impl::routing_table<Selector>(stream, target));
+                impl->table = SODIUM_SHARED_PTR<impl::routing_table<A,Selector>>(new impl::routing_table<A,Selector>(stream, target));
                 auto table(impl->table);
                 table->kill = in.listen_raw(trans1.impl(), target,
                     new std::function<void(const std::shared_ptr<impl::node>&, impl::transaction_impl*, const light_ptr&)>(
@@ -95,7 +95,7 @@ namespace sodium {
 
             stream<A> filter_equals(Selector sel) const {
                 if (impl->table) {
-                    SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
+                    SODIUM_TUPLE<impl::stream_<A>,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream<A>();
                     auto target = std::get<1>(p);
                     auto table(impl->table);
     

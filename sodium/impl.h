@@ -12,14 +12,16 @@ namespace sodium {
 
     namespace impl {
 
-        stream_::stream_()
+        template <typename A>
+        stream_<A>::stream_()
         {
         }
 
         /*!
          * listen to streams.
          */
-        std::function<void()>* stream_::listen_raw(
+        template <typename A>
+        std::function<void()>* stream_<A>::listen_raw(
                     transaction_impl* trans,
                     const SODIUM_SHARED_PTR<impl::node>& target,
                     std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>* handler,
@@ -29,17 +31,19 @@ namespace sodium {
             return listen_impl(trans, target, h, suppressEarlierFirings);
         }
 
-        cell_ stream_::hold_(transaction_impl* trans, const light_ptr& initA) const
+        template <typename A>
+        cell_<A> stream_<A>::hold_(transaction_impl* trans, const light_ptr& initA) const
         {
-            return cell_(
-                SODIUM_SHARED_PTR<impl::cell_impl>(impl::hold(trans, initA, *this))
+            return cell_<A>(
+                SODIUM_SHARED_PTR<impl::cell_impl<A>>(impl::hold(trans, initA, *this))
             );
         }
 
-        cell_ stream_::hold_lazy_(transaction_impl* trans, const std::function<light_ptr()>& initA) const
+        template <typename A>
+        cell_<A> stream_<A>::hold_lazy_(transaction_impl* trans, const std::function<light_ptr()>& initA) const
         {
-            return cell_(
-                SODIUM_SHARED_PTR<impl::cell_impl>(impl::hold_lazy(trans, initA, *this))
+            return cell_<A>(
+                SODIUM_SHARED_PTR<impl::cell_impl<A>>(impl::hold_lazy(trans, initA, *this))
             );
         }
 
@@ -53,11 +57,12 @@ namespace sodium {
                 } \
             } while (0)
 
-        stream_ stream_::once_(transaction_impl* trans1) const
+        template <typename A>
+        stream_<A> stream_<A>::once_(transaction_impl* trans1) const
         {
             SODIUM_SHARED_PTR<std::function<void()>*> ppKill(new std::function<void()>*(NULL));
 
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
+            SODIUM_TUPLE<impl::stream_<A>,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream<A>();
             *ppKill = listen_raw(trans1, SODIUM_TUPLE_GET<1>(p),
                 new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
                     [ppKill] (const std::shared_ptr<impl::node>& target, impl::transaction_impl* trans2, const light_ptr& ptr) {
@@ -74,8 +79,9 @@ namespace sodium {
             );
         }
 
-        stream_ stream_::merge_(transaction_impl* trans1, const stream_& other) const {
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
+        template <typename A>
+        stream_<A> stream_<A>::merge_(transaction_impl* trans1, const stream_<A>& other) const {
+            SODIUM_TUPLE<impl::stream_<A>,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream<A>();
             SODIUM_SHARED_PTR<impl::node> left(new impl::node);
             const SODIUM_SHARED_PTR<impl::node>& right = SODIUM_TUPLE_GET<1>(p);
             char* h = new char;
@@ -101,12 +107,13 @@ namespace sodium {
             boost::optional<light_ptr> oValue;
         };
 
-        stream_ stream_::coalesce_(transaction_impl* trans1,
+        template <typename A>
+        stream_<A> stream_<A>::coalesce_(transaction_impl* trans1,
                 const std::function<light_ptr(const light_ptr&, const light_ptr&)>& combine
             ) const
         {
             SODIUM_SHARED_PTR<coalesce_state> pState(new coalesce_state);
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
+            SODIUM_TUPLE<impl::stream_<A>,SODIUM_SHARED_PTR<impl::node>> p = impl::unsafe_new_stream<A>();
             auto kill = listen_raw(trans1, SODIUM_TUPLE_GET<1>(p),
                 new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
                     [pState, combine] (const std::shared_ptr<impl::node>& target, impl::transaction_impl* trans2, const light_ptr& ptr) {
@@ -125,7 +132,8 @@ namespace sodium {
             return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill);
         }
 
-        stream_ stream_::last_firing_only_(transaction_impl* trans) const
+        template <typename A>
+        stream_<A> stream_<A>::last_firing_only_(transaction_impl* trans) const
         {
             return coalesce_(trans, [] (const light_ptr& fst, const light_ptr& snd) {
                 return snd;
@@ -137,11 +145,12 @@ namespace sodium {
          * current one, i.e. no changes from the current transaction are
          * taken.
          */
-        stream_ stream_::snapshot_(transaction_impl* trans1, const cell_& beh,
+        template <typename A> template <typename B, typename C>
+        stream_<C> stream_<A>::snapshot_(transaction_impl* trans1, const cell_<B>& beh,
                 const std::function<light_ptr(const light_ptr&, const light_ptr&)>& combine
             ) const
         {
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
+            SODIUM_TUPLE<impl::stream_<C>,SODIUM_SHARED_PTR<impl::node>> p = impl::unsafe_new_stream<C>();
             auto kill = listen_raw(trans1, SODIUM_TUPLE_GET<1>(p),
                     new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
                         [beh, combine] (const std::shared_ptr<impl::node>& target, impl::transaction_impl* trans2, const light_ptr& a) {
@@ -154,11 +163,12 @@ namespace sodium {
          * Filter this stream based on the specified predicate, passing through values
          * where the predicate returns true.
          */
-        stream_ stream_::filter_(transaction_impl* trans1,
+        template <typename A>
+        stream_<A> stream_<A>::filter_(transaction_impl* trans1,
                 const std::function<bool(const light_ptr&)>& pred
             ) const
         {
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
+            SODIUM_TUPLE<impl::stream_<A>,SODIUM_SHARED_PTR<impl::node>> p = impl::unsafe_new_stream<A>();
             auto kill = listen_raw(trans1, std::get<1>(p),
                     new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
                         [pred] (const std::shared_ptr<impl::node>& target, impl::transaction_impl* trans2, const light_ptr& ptr) {
@@ -167,20 +177,23 @@ namespace sodium {
             return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill);
         }
 
-        cell_impl::cell_impl()
-            : updates(stream_()),
+        template <typename A>
+        cell_impl<A>::cell_impl()
+            : updates(stream_<A>()),
               kill(NULL)
         {
         }
 
-        cell_impl::cell_impl(
-            const stream_& updates_,
-            const SODIUM_SHARED_PTR<cell_impl>& parent_)
+        template <typename A>
+        cell_impl<A>::cell_impl(
+            const stream_<A>& updates_,
+            const SODIUM_SHARED_PTR<cell_impl<A>>& parent_)
             : updates(updates_), kill(NULL), parent(parent_)
         {
         }
 
-        cell_impl::~cell_impl()
+        template <typename A>
+        cell_impl<A>::~cell_impl()
         {
             if (kill) {
                 (*kill)();
@@ -219,7 +232,8 @@ namespace sodium {
         /*!
          * Creates an stream, that values can be pushed into using impl::send(). 
          */
-        SODIUM_TUPLE<stream_, SODIUM_SHARED_PTR<node> > unsafe_new_stream()
+        template <typename A>
+        SODIUM_TUPLE<stream_<A>, SODIUM_SHARED_PTR<node>> unsafe_new_stream()
         {
             SODIUM_SHARED_PTR<node> n1(new node);
             SODIUM_WEAK_PTR<node> n_weak(n1);
@@ -264,42 +278,46 @@ namespace sodium {
                 reinterpret_cast<listen_impl_func<H_NODE>*>(impl.get()));
             boost::intrusive_ptr<listen_impl_func<H_STREAM> > li_stream(
                 reinterpret_cast<listen_impl_func<H_STREAM>*>(impl.get()));
-            return SODIUM_MAKE_TUPLE(stream_(li_stream), n1);
+            return SODIUM_MAKE_TUPLE(stream_<A>(li_stream), n1);
         }
 
-        stream_sink_impl::stream_sink_impl()
+        template <typename A>
+        stream_sink_impl<A>::stream_sink_impl()
         {
         }
 
-        stream_ stream_sink_impl::construct()
+        template <typename A>
+        stream_<A> stream_sink_impl<A>::construct()
         {
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
+            SODIUM_TUPLE<impl::stream_<A>,SODIUM_SHARED_PTR<impl::node>> p = impl::unsafe_new_stream<A>();
             this->target = SODIUM_TUPLE_GET<1>(p);
             return SODIUM_TUPLE_GET<0>(p);
         }
 
-        void stream_sink_impl::send(transaction_impl* trans, const light_ptr& value) const
+        template <typename A>
+        void stream_sink_impl<A>::send(transaction_impl* trans, const light_ptr& value) const
         {
             sodium::impl::send(target, trans, value);
         }
 
 
-        SODIUM_SHARED_PTR<cell_impl> hold(transaction_impl* trans0, const light_ptr& initValue, const stream_& input)
+        template <typename A>
+        SODIUM_SHARED_PTR<cell_impl<A>> hold(transaction_impl* trans0, const light_ptr& initValue, const stream_<A>& input)
         {
 #if defined(SODIUM_CONSTANT_OPTIMIZATION)
             if (input.is_never())
-                return SODIUM_SHARED_PTR<cell_impl>(new cell_impl_constant(initValue));
+                return SODIUM_SHARED_PTR<cell_impl<A>>(new cell_impl_constant<A>(initValue));
             else {
 #endif
-                SODIUM_SHARED_PTR<cell_impl_concrete<cell_state> > impl(
-                    new cell_impl_concrete<cell_state>(input, cell_state(initValue), std::shared_ptr<cell_impl>())
+                SODIUM_SHARED_PTR<cell_impl_concrete<A,cell_state<A>>> impl(
+                    new cell_impl_concrete<A,cell_state<A>>(input, cell_state<A>(initValue), std::shared_ptr<cell_impl<A>>())
                 );
-                SODIUM_WEAK_PTR<cell_impl_concrete<cell_state> > impl_weak(impl);
+                SODIUM_WEAK_PTR<cell_impl_concrete<A,cell_state<A>>> impl_weak(impl);
                 impl->kill =
                     input.listen_raw(trans0, SODIUM_SHARED_PTR<node>(new node(SODIUM_IMPL_RANK_T_MAX)),
                     new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
                         [impl_weak] (const std::shared_ptr<impl::node>& target, transaction_impl* trans, const light_ptr& ptr) {
-                            SODIUM_SHARED_PTR<cell_impl_concrete<cell_state> > impl_ = impl_weak.lock();
+                            SODIUM_SHARED_PTR<cell_impl_concrete<A,cell_state<A>>> impl_ = impl_weak.lock();
                             if (impl_) {
                                 bool first = !impl_->state.update;
                                 impl_->state.update = boost::optional<light_ptr>(ptr);
@@ -315,17 +333,18 @@ namespace sodium {
 #endif
         }
 
-        SODIUM_SHARED_PTR<cell_impl> hold_lazy(transaction_impl* trans0, const std::function<light_ptr()>& initValue, const stream_& input)
+        template <typename A>
+        SODIUM_SHARED_PTR<cell_impl<A>> hold_lazy(transaction_impl* trans0, const std::function<light_ptr()>& initValue, const stream_<A>& input)
         {
-            SODIUM_SHARED_PTR<cell_impl_concrete<cell_state_lazy> > impl(
-                new cell_impl_concrete<cell_state_lazy>(input, cell_state_lazy(initValue), std::shared_ptr<cell_impl>())
+            SODIUM_SHARED_PTR<cell_impl_concrete<A,cell_state_lazy<A>>> impl(
+                new cell_impl_concrete<A,cell_state_lazy<A>>(input, cell_state_lazy<A>(initValue), std::shared_ptr<cell_impl<A>>())
             );
-            SODIUM_WEAK_PTR<cell_impl_concrete<cell_state_lazy> > w_impl(impl);
+            SODIUM_WEAK_PTR<cell_impl_concrete<A,cell_state_lazy<A>> > w_impl(impl);
             impl->kill =
                 input.listen_raw(trans0, SODIUM_SHARED_PTR<node>(new node(SODIUM_IMPL_RANK_T_MAX)),
                 new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
                     [w_impl] (const std::shared_ptr<impl::node>& target, transaction_impl* trans, const light_ptr& ptr) {
-                        SODIUM_SHARED_PTR<cell_impl_concrete<cell_state_lazy> > impl_ = w_impl.lock();
+                        SODIUM_SHARED_PTR<cell_impl_concrete<A,cell_state_lazy<A>> > impl_ = w_impl.lock();
                         if (impl_) {
                             bool first = !impl_->state.update;
                             impl_->state.update = boost::optional<light_ptr>(ptr);
@@ -335,35 +354,40 @@ namespace sodium {
                         }
                     })
                 , false);
-            return std::static_pointer_cast<cell_impl, cell_impl_concrete<cell_state_lazy>>(impl);
+            return std::static_pointer_cast<cell_impl<A>, cell_impl_concrete<A,cell_state_lazy<A>>>(impl);
         }
 
-        cell_::cell_()
+        template <typename A>
+        cell_<A>::cell_()
         {
         }
 
-        cell_::cell_(cell_impl* impl_)
+        template <typename A>
+        cell_<A>::cell_(cell_impl<A>* impl_)
             : impl(impl_)
         {
         }
 
-        cell_::cell_(SODIUM_SHARED_PTR<cell_impl> impl_)
+        template <typename A>
+        cell_<A>::cell_(SODIUM_SHARED_PTR<cell_impl<A>> impl_)
             : impl(std::move(impl_))
         {
         }
 
-        cell_::cell_(light_ptr a)
-            : impl(new cell_impl_constant(std::move(a)))
+        template <typename A>
+        cell_<A>::cell_(light_ptr a)
+            : impl(new cell_impl_constant<A>(std::move(a)))
         {
         }
 
-        stream_ cell_::value_(transaction_impl* trans) const
+        template <typename A>
+        stream_<A> cell_<A>::value_(transaction_impl* trans) const
         {
-            SODIUM_TUPLE<stream_,SODIUM_SHARED_PTR<node> > p = unsafe_new_stream();
-            const stream_& eSpark = std::get<0>(p);
+            SODIUM_TUPLE<stream_<A>,SODIUM_SHARED_PTR<node>> p = unsafe_new_stream<A>();
+            const stream_<A>& eSpark = std::get<0>(p);
             const SODIUM_SHARED_PTR<node>& node = std::get<1>(p);
             send(node, trans, light_ptr::create<unit>(unit()));
-            stream_ eInitial = eSpark.snapshot_(trans, *this,
+            stream_<A> eInitial = eSpark.template snapshot_<A,A>(trans, *this,
                 [] (const light_ptr& a, const light_ptr& b) -> light_ptr {
                     return b;
                 }
@@ -375,7 +399,8 @@ namespace sodium {
         /*!
          * For optimization, if this cell is a constant, then return its value.
          */
-        boost::optional<light_ptr> cell_::get_constant_value() const
+        template <typename A>
+        boost::optional<light_ptr> cell_<A>::get_constant_value() const
         {
             return impl->updates.is_never() ? boost::optional<light_ptr>(impl->sample())
                                             : boost::optional<light_ptr>();
@@ -389,19 +414,20 @@ namespace sodium {
             boost::optional<light_ptr> a;
         };
 
-        cell_ apply(transaction_impl* trans0, const cell_& bf, const cell_& ba)
+        template <typename A, typename B>
+        cell_<B> apply(transaction_impl* trans0, const cell_<std::function<B(const A&)>>& bf, const cell_<A>& ba)
         {
 #if defined(SODIUM_CONSTANT_OPTIMIZATION)
             boost::optional<light_ptr> ocf = bf.get_constant_value();
             if (ocf) { // function is constant
                 auto f = *ocf.get().cast_ptr<std::function<light_ptr(const light_ptr&)>>(NULL);
-                return impl::map_(trans0, f, ba);  // map optimizes to a constant where ba is constant
+                return impl::map_<A,B>(trans0, f, ba);  // map optimizes to a constant where ba is constant
             }
             else {
                 boost::optional<light_ptr> oca = ba.get_constant_value();
                 if (oca) {  // 'a' value is constant but function is not
                     const light_ptr& a = oca.get();
-                    return impl::map_(trans0, [a] (const light_ptr& pf) -> light_ptr {
+                    return impl::map_<std::function<B(const A&)>,B>(trans0, [a] (const light_ptr& pf) -> light_ptr {
                         const std::function<light_ptr(const light_ptr&)>& f =
                             *pf.cast_ptr<std::function<light_ptr(const light_ptr&)>>(NULL);
                         return f(a);
@@ -413,7 +439,7 @@ namespace sodium {
                     SODIUM_SHARED_PTR<applicative_state> state(new applicative_state);
 
                     SODIUM_SHARED_PTR<impl::node> in_target(new impl::node);
-                    SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
+                    SODIUM_TUPLE<impl::stream_<B>,SODIUM_SHARED_PTR<impl::node>> p = impl::unsafe_new_stream<B>();
                     const SODIUM_SHARED_PTR<impl::node>& out_target = SODIUM_TUPLE_GET<1>(p);
                     char* h = new char;
                     if (in_target->link(h, out_target))
@@ -451,7 +477,7 @@ namespace sodium {
                     });
                     return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill1, kill2, kill3).hold_lazy_(
                         trans0, [bf, ba] () -> light_ptr {
-                            auto f = *bf.impl->sample().cast_ptr<std::function<light_ptr(const light_ptr&)>>(NULL);
+                            auto f = *bf.impl->sample().template cast_ptr<std::function<light_ptr(const light_ptr&)>>(NULL);
                             return f(ba.impl->sample());
                         }
                     );
@@ -461,9 +487,10 @@ namespace sodium {
 #endif
         }
 
-        stream_ stream_::add_cleanup_(transaction_impl* trans, std::function<void()>* cleanup) const
+        template <typename A>
+        stream_<A> stream_<A>::add_cleanup_(transaction_impl* trans, std::function<void()>* cleanup) const
         {
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
+            SODIUM_TUPLE<impl::stream_<A>,SODIUM_SHARED_PTR<impl::node>> p = impl::unsafe_new_stream<A>();
             auto kill = listen_raw(trans, std::get<1>(p),
                     new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(send),
                     false);
@@ -473,11 +500,12 @@ namespace sodium {
         /*!
          * Map a function over this stream to modify the output value.
          */
-        stream_ map_(transaction_impl* trans1,
+        template <typename A, typename B>
+        stream_<B> map_(transaction_impl* trans1,
             const std::function<light_ptr(const light_ptr&)>& f,
-            const stream_& ev)
+            const stream_<A>& ev)
         {
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
+            SODIUM_TUPLE<impl::stream_<B>,SODIUM_SHARED_PTR<impl::node>> p = impl::unsafe_new_stream<B>();
             auto kill = ev.listen_raw(trans1, std::get<1>(p),
                     new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
                         [f] (const std::shared_ptr<impl::node>& target, impl::transaction_impl* trans2, const light_ptr& ptr) {
@@ -486,17 +514,18 @@ namespace sodium {
             return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill);
         }
 
-        cell_ map_(transaction_impl* trans,
+        template <typename A, typename B>
+        cell_<B> map_(transaction_impl* trans,
             const std::function<light_ptr(const light_ptr&)>& f,
-            const cell_& beh) {
+            const cell_<A>& beh) {
 #if defined(SODIUM_CONSTANT_OPTIMIZATION)
             boost::optional<light_ptr> ca = beh.get_constant_value();
             if (ca)
-                return cell_(f(ca.get()));
+                return cell_<B>(f(ca.get()));
             else {
 #endif
                 auto impl = beh.impl;
-                return map_(trans, f, beh.updates_()).hold_lazy_(trans, [f, impl] () -> light_ptr {
+                return map_<A,B>(trans, f, beh.updates_()).hold_lazy_(trans, [f, impl] () -> light_ptr {
                     return f(impl->sample());
                 });
 #if defined(SODIUM_CONSTANT_OPTIMIZATION)
@@ -504,66 +533,11 @@ namespace sodium {
 #endif
         }
 
-        stream_ switch_s(transaction_impl* trans0, const cell_& bea)
-        {
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = unsafe_new_stream();
-            const SODIUM_SHARED_PTR<impl::node>& target1 = SODIUM_TUPLE_GET<1>(p);
-            std::shared_ptr<std::function<void()>*> pKillInner(new std::function<void()>*(NULL));
-            trans0->prioritized(target1, [pKillInner, bea, target1] (transaction_impl* trans) {
-                if (*pKillInner == NULL)
-                    *pKillInner = bea.impl->sample().cast_ptr<stream_>(NULL)->listen_raw(trans, target1, NULL, false);
-            });
-
-            auto killOuter = bea.updates_().listen_raw(trans0, target1,
-                new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
-                    [pKillInner] (const std::shared_ptr<impl::node>& target2, impl::transaction_impl* trans1, const light_ptr& pea) {
-                        const stream_& ea = *pea.cast_ptr<stream_>(NULL);
-                        trans1->last([pKillInner, ea, target2, trans1] () {
-                            KILL_ONCE(pKillInner);
-                            *pKillInner = ea.listen_raw(trans1, target2, NULL, true);
-                        });
-                    }),
-                false
-            );
-            return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(
-                new std::function<void()>([pKillInner] {
-                    KILL_ONCE(pKillInner);
-                })
-                , killOuter);
-        }
-
-        cell_ switch_c(transaction_impl* trans0, const cell_& bba)
-        {
-            auto za = [bba] () -> light_ptr { return bba.impl->sample().cast_ptr<cell_>(NULL)->impl->sample(); };
-            SODIUM_SHARED_PTR<std::function<void()>*> pKillInner(new std::function<void()>*(NULL));
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = unsafe_new_stream();
-            auto out_target = SODIUM_TUPLE_GET<1>(p);
-            auto killOuter =
-                bba.value_(trans0).listen_raw(trans0, out_target,
-                new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
-                    [pKillInner] (const std::shared_ptr<impl::node>& target, transaction_impl* trans, const light_ptr& pa) {
-                        // Note: If any switch takes place during a transaction, then the
-                        // value().listen will always cause a sample to be fetched from the
-                        // one we just switched to. The caller will be fetching our output
-                        // using value().listen, and value() throws away all firings except
-                        // for the last one. Therefore, anything from the old input cell
-                        // that might have happened during this transaction will be suppressed.
-                        KILL_ONCE(pKillInner);
-                        const cell_& ba = *pa.cast_ptr<cell_>(NULL);
-                        *pKillInner = ba.value_(trans).listen_raw(trans, target, NULL, false);
-                    })
-                , false);
-            return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(
-                new std::function<void()>([pKillInner] {
-                    KILL_ONCE(pKillInner);
-                })
-                , killOuter).hold_lazy_(trans0, za);
-        }
-
-        stream_ filter_optional_(transaction_impl* trans1, const stream_& input,
+        template <typename A>
+        stream_<A> filter_optional_(transaction_impl* trans1, const stream_<boost::optional<A>>& input,
             const std::function<boost::optional<light_ptr>(const light_ptr&)>& f)
         {
-            auto p = impl::unsafe_new_stream();
+            auto p = impl::unsafe_new_stream<A>();
             auto kill = input.listen_raw(trans1, std::get<1>(p),
                 new std::function<void(const SODIUM_SHARED_PTR<impl::node>&, impl::transaction_impl*, const light_ptr&)>(
                     [f] (const SODIUM_SHARED_PTR<impl::node>& target, impl::transaction_impl* trans2, const light_ptr& poa) {
