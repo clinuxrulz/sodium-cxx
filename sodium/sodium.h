@@ -386,11 +386,26 @@ namespace sodium {
         stream_ map_(transaction_impl* trans, const std::function<light_ptr(const light_ptr&)>& f, const stream_& ca);
 
         struct cell_impl {
-            cell_impl();
+            cell_impl()
+                : updates(stream_()),
+                  kill(NULL)
+            {
+            }
+
             cell_impl(
                 const stream_& updates,
-                const SODIUM_SHARED_PTR<cell_impl>& parent);
-            virtual ~cell_impl();
+                const SODIUM_SHARED_PTR<cell_impl>& parent)
+                : updates(updates), kill(NULL), parent(parent)
+            {
+            }
+
+            virtual ~cell_impl()
+            {
+                if (kill) {
+                    (*kill)();
+                    delete kill;
+                }
+            }
 
             virtual const light_ptr& sample() const = 0;
             virtual const light_ptr& newValue() const = 0;

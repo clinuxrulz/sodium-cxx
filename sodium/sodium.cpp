@@ -14,27 +14,6 @@ namespace sodium {
 
     namespace impl {
 
-        cell_impl::cell_impl()
-            : updates(stream_()),
-              kill(NULL)
-        {
-        }
-
-        cell_impl::cell_impl(
-            const stream_& updates_,
-            const SODIUM_SHARED_PTR<cell_impl>& parent_)
-            : updates(updates_), kill(NULL), parent(parent_)
-        {
-        }
-
-        cell_impl::~cell_impl()
-        {
-            if (kill) {
-                (*kill)();
-                delete kill;
-            }
-        }
-        
         /*!
          * Function to push a value into an stream
          */
