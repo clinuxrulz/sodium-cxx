@@ -446,15 +446,6 @@ namespace sodium {
 #endif
         }
 
-        stream_ stream_::add_cleanup_(transaction_impl* trans, std::function<void()>* cleanup) const
-        {
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
-            auto kill = listen_raw(trans, std::get<1>(p),
-                    new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(send),
-                    false);
-            return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill, cleanup);
-        }
-
         /*!
          * Map a function over this stream to modify the output value.
          */

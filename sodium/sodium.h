@@ -92,8 +92,22 @@ namespace sodium {
 
     namespace impl {
 
+        class stream_;
         class cell_;
         struct cell_impl;
+
+        /*!
+         * Creates an stream, that values can be pushed into using impl::send(). 
+         */
+        SODIUM_TUPLE<
+                stream_,
+                SODIUM_SHARED_PTR<node>
+            > unsafe_new_stream();
+
+        /*!
+         * Function to push a value into an stream
+         */
+        void send(const SODIUM_SHARED_PTR<node>& n, transaction_impl* trans, const light_ptr& ptr);
 
         class stream_ {
         friend class cell_;
@@ -228,7 +242,15 @@ namespace sodium {
             /*!
              * Create a new stream that is like this stream but has an extra cleanup.
              */
-            stream_ add_cleanup_(transaction_impl* trans, std::function<void()>* cleanup) const;
+            stream_ add_cleanup_(transaction_impl* trans, std::function<void()>* cleanup) const
+            {
+                SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
+                auto kill = listen_raw(trans, std::get<1>(p),
+                        new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(send),
+                        false);
+                return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill, cleanup);
+            }
+
             cell_ hold_(transaction_impl* trans, const light_ptr& initA) const;
             cell_ hold_lazy_(transaction_impl* trans, const std::function<light_ptr()>& initA) const;
             stream_ once_(transaction_impl* trans) const;
@@ -257,19 +279,6 @@ namespace sodium {
                         return light_ptr::create<B>(f(*a.cast_ptr<A>(NULL))); \
                    }
         stream_ map_(transaction_impl* trans, const std::function<light_ptr(const light_ptr&)>& f, const stream_& ca);
-
-        /*!
-         * Function to push a value into an stream
-         */
-        void send(const SODIUM_SHARED_PTR<node>& n, transaction_impl* trans, const light_ptr& ptr);
-
-        /*!
-         * Creates an stream, that values can be pushed into using impl::send(). 
-         */
-        SODIUM_TUPLE<
-                stream_,
-                SODIUM_SHARED_PTR<node>
-            > unsafe_new_stream();
 
         struct cell_impl {
             cell_impl();
