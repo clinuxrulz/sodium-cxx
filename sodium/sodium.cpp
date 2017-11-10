@@ -14,20 +14,6 @@ namespace sodium {
 
     namespace impl {
 
-        cell_ stream_::hold_(transaction_impl* trans, const light_ptr& initA) const
-        {
-            return cell_(
-                SODIUM_SHARED_PTR<impl::cell_impl>(impl::hold(trans, initA, *this))
-            );
-        }
-
-        cell_ stream_::hold_lazy_(transaction_impl* trans, const std::function<light_ptr()>& initA) const
-        {
-            return cell_(
-                SODIUM_SHARED_PTR<impl::cell_impl>(impl::hold_lazy(trans, initA, *this))
-            );
-        }
-
         #define KILL_ONCE(ppKill) \
             do { \
                 function<void()>* pKill = *ppKill; \

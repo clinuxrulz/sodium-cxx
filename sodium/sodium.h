@@ -251,8 +251,8 @@ namespace sodium {
                 return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill, cleanup);
             }
 
-            cell_ hold_(transaction_impl* trans, const light_ptr& initA) const;
-            cell_ hold_lazy_(transaction_impl* trans, const std::function<light_ptr()>& initA) const;
+            inline cell_ hold_(transaction_impl* trans, const light_ptr& initA) const;
+            inline cell_ hold_lazy_(transaction_impl* trans, const std::function<light_ptr()>& initA) const;
             stream_ once_(transaction_impl* trans) const;
             stream_ merge_(transaction_impl* trans, const stream_& other) const;
             stream_ coalesce_(transaction_impl* trans, const std::function<light_ptr(const light_ptr&, const light_ptr&)>& combine) const;
@@ -425,6 +425,20 @@ namespace sodium {
 
         cell_ map_(transaction_impl* trans, const std::function<light_ptr(const light_ptr&)>& f,
             const cell_& beh);
+
+        cell_ stream_::hold_(transaction_impl* trans, const light_ptr& initA) const
+        {
+            return cell_(
+                SODIUM_SHARED_PTR<impl::cell_impl>(impl::hold(trans, initA, *this))
+            );
+        }
+
+        cell_ stream_::hold_lazy_(transaction_impl* trans, const std::function<light_ptr()>& initA) const
+        {
+            return cell_(
+                SODIUM_SHARED_PTR<impl::cell_impl>(impl::hold_lazy(trans, initA, *this))
+            );
+        }
     }  // end namespace impl
 
     template <typename A>
