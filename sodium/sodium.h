@@ -285,7 +285,28 @@ namespace sodium {
                 );
             }
 
-            stream_ merge_(transaction_impl* trans, const stream_& other) const;
+            stream_ merge_(transaction_impl* trans1, const stream_& other) const
+            {
+                SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
+                SODIUM_SHARED_PTR<impl::node> left(new impl::node);
+                const SODIUM_SHARED_PTR<impl::node>& right = SODIUM_TUPLE_GET<1>(p);
+                char* h = new char;
+                if (left->link(h, right))
+                    trans1->to_regen = true;
+                // defer right side to make sure merge is left-biased
+                auto kill1 = this->listen_raw(trans1, left,
+                    new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
+                        [right] (const std::shared_ptr<impl::node>&, impl::transaction_impl* trans2, const light_ptr& a) {
+                            send(right, trans2, a);
+                        }), false);
+                auto kill2 = other.listen_raw(trans1, right, NULL, false);
+                auto kill3 = new std::function<void()>([left, h] () {
+                    left->unlink(h);
+                    delete h;
+                });
+                return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill1, kill2, kill3);
+            }
+
             stream_ coalesce_(transaction_impl* trans, const std::function<light_ptr(const light_ptr&, const light_ptr&)>& combine) const;
             stream_ last_firing_only_(transaction_impl* trans) const;
             stream_ snapshot_(transaction_impl* trans, const cell_& beh, const std::function<light_ptr(const light_ptr&, const light_ptr&)>& combine) const;
