@@ -15,24 +15,6 @@ namespace sodium {
     namespace impl {
 
         /*!
-         * Sample the cell's value as at the transaction before the
-         * current one, i.e. no changes from the current transaction are
-         * taken.
-         */
-        stream_ stream_::snapshot_(transaction_impl* trans1, const cell_& beh,
-                const std::function<light_ptr(const light_ptr&, const light_ptr&)>& combine
-            ) const
-        {
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
-            auto kill = listen_raw(trans1, SODIUM_TUPLE_GET<1>(p),
-                    new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
-                        [beh, combine] (const std::shared_ptr<impl::node>& target, impl::transaction_impl* trans2, const light_ptr& a) {
-                        send(target, trans2, combine(a, beh.impl->sample()));
-                    }), false);
-            return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill);
-        }
-
-        /*!
          * Filter this stream based on the specified predicate, passing through values
          * where the predicate returns true.
          */
