@@ -307,7 +307,34 @@ namespace sodium {
                 return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill1, kill2, kill3);
             }
 
-            stream_ coalesce_(transaction_impl* trans, const std::function<light_ptr(const light_ptr&, const light_ptr&)>& combine) const;
+            struct coalesce_state {
+                coalesce_state() {}
+                ~coalesce_state() {}
+                boost::optional<light_ptr> oValue;
+            };
+
+            stream_ coalesce_(transaction_impl* trans1, const std::function<light_ptr(const light_ptr&, const light_ptr&)>& combine) const
+            {
+                SODIUM_SHARED_PTR<coalesce_state> pState(new coalesce_state);
+                SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
+                auto kill = listen_raw(trans1, SODIUM_TUPLE_GET<1>(p),
+                    new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
+                        [pState, combine] (const std::shared_ptr<impl::node>& target, impl::transaction_impl* trans2, const light_ptr& ptr) {
+                            if (!pState->oValue) {
+                                pState->oValue = boost::optional<light_ptr>(ptr);
+                                trans2->prioritized(target, [target, pState] (transaction_impl* trans3) {
+                                    if (pState->oValue) {
+                                        send(target, trans3, pState->oValue.get());
+                                        pState->oValue = boost::optional<light_ptr>();
+                                    }
+                                });
+                            }
+                            else
+                                pState->oValue = boost::make_optional(combine(pState->oValue.get(), ptr));
+                        }), false);
+                return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill);
+            }
+
             stream_ last_firing_only_(transaction_impl* trans) const;
             stream_ snapshot_(transaction_impl* trans, const cell_& beh, const std::function<light_ptr(const light_ptr&, const light_ptr&)>& combine) const;
             stream_ filter_(transaction_impl* trans, const std::function<bool(const light_ptr&)>& pred) const;
