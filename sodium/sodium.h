@@ -121,7 +121,7 @@ namespace sodium {
             boost::intrusive_ptr<listen_impl_func<H_STREAM> > p_listen_impl;
 
         public:
-            stream_();
+            stream_() = default;
             stream_(boost::intrusive_ptr<listen_impl_func<H_STREAM>> p_listen_impl_)
                 : p_listen_impl(std::move(p_listen_impl_)) {}
 

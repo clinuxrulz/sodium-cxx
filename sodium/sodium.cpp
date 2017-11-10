@@ -14,10 +14,6 @@ namespace sodium {
 
     namespace impl {
 
-        stream_::stream_()
-        {
-        }
-
         /*!
          * listen to streams.
          */
