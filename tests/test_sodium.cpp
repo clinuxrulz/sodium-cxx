@@ -1128,11 +1128,9 @@ void test_sodium::router_loop1()
 
 int main(int argc, char* argv[])
 {
-    for (int i = 0; i < 1; i++) {
-        CppUnit::TextUi::TestRunner runner;
-        runner.addTest( test_sodium::suite() );
-        runner.run();
-    }
-    return 0;
+    CppUnit::TextUi::TestRunner runner;
+    runner.addTest( test_sodium::suite() );
+    bool success = runner.run();
+    return success ? 0 : 1;
 }
 
