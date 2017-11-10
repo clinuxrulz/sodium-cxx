@@ -335,7 +335,13 @@ namespace sodium {
                 return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill);
             }
 
-            stream_ last_firing_only_(transaction_impl* trans) const;
+            stream_ last_firing_only_(transaction_impl* trans) const
+            {
+                return coalesce_(trans, [] (const light_ptr& fst, const light_ptr& snd) {
+                    return snd;
+                });
+            }
+
             stream_ snapshot_(transaction_impl* trans, const cell_& beh, const std::function<light_ptr(const light_ptr&, const light_ptr&)>& combine) const;
             stream_ filter_(transaction_impl* trans, const std::function<bool(const light_ptr&)>& pred) const;
 

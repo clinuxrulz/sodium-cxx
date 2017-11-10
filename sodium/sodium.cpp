@@ -14,13 +14,6 @@ namespace sodium {
 
     namespace impl {
 
-        stream_ stream_::last_firing_only_(transaction_impl* trans) const
-        {
-            return coalesce_(trans, [] (const light_ptr& fst, const light_ptr& snd) {
-                return snd;
-            });
-        }
-
         /*!
          * Sample the cell's value as at the transaction before the
          * current one, i.e. no changes from the current transaction are
