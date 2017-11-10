@@ -14,37 +14,6 @@ namespace sodium {
 
     namespace impl {
 
-        #define KILL_ONCE(ppKill) \
-            do { \
-                function<void()>* pKill = *ppKill; \
-                if (pKill != NULL) { \
-                    *ppKill = NULL; \
-                    (*pKill)(); \
-                    delete pKill; \
-                } \
-            } while (0)
-
-        stream_ stream_::once_(transaction_impl* trans1) const
-        {
-            SODIUM_SHARED_PTR<function<void()>*> ppKill(new function<void()>*(NULL));
-
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
-            *ppKill = listen_raw(trans1, SODIUM_TUPLE_GET<1>(p),
-                new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
-                    [ppKill] (const std::shared_ptr<impl::node>& target, impl::transaction_impl* trans2, const light_ptr& ptr) {
-                        if (*ppKill) {
-                            send(target, trans2, ptr);
-                            KILL_ONCE(ppKill);
-                        }
-                    }),
-                false);
-            return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(
-                new std::function<void()>([ppKill] () {
-                    KILL_ONCE(ppKill);
-                })
-            );
-        }
-
         stream_ stream_::merge_(transaction_impl* trans1, const stream_& other) const {
             SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
             SODIUM_SHARED_PTR<impl::node> left(new impl::node);

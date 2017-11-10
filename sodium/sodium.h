@@ -28,6 +28,16 @@
 #define __attribute__(x)
 #endif
 
+#define KILL_ONCE(ppKill) \
+    do { \
+        std::function<void()>* pKill = *ppKill; \
+        if (pKill != NULL) { \
+            *ppKill = NULL; \
+            (*pKill)(); \
+            delete pKill; \
+        } \
+    } while (0)
+
 // TO DO:
 // the sample_lazy() mechanism is not correct yet. The lazy value needs to be
 // fixed at the end of the transaction.
@@ -253,7 +263,28 @@ namespace sodium {
 
             inline cell_ hold_(transaction_impl* trans, const light_ptr& initA) const;
             inline cell_ hold_lazy_(transaction_impl* trans, const std::function<light_ptr()>& initA) const;
-            stream_ once_(transaction_impl* trans) const;
+
+            stream_ once_(transaction_impl* trans1) const
+            {
+                SODIUM_SHARED_PTR<std::function<void()>*> ppKill(new std::function<void()>*(NULL));
+
+                SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
+                *ppKill = listen_raw(trans1, SODIUM_TUPLE_GET<1>(p),
+                    new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
+                        [ppKill] (const std::shared_ptr<impl::node>& target, impl::transaction_impl* trans2, const light_ptr& ptr) {
+                            if (*ppKill) {
+                                send(target, trans2, ptr);
+                                KILL_ONCE(ppKill);
+                            }
+                        }),
+                    false);
+                return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(
+                    new std::function<void()>([ppKill] () {
+                        KILL_ONCE(ppKill);
+                    })
+                );
+            }
+
             stream_ merge_(transaction_impl* trans, const stream_& other) const;
             stream_ coalesce_(transaction_impl* trans, const std::function<light_ptr(const light_ptr&, const light_ptr&)>& combine) const;
             stream_ last_firing_only_(transaction_impl* trans) const;
