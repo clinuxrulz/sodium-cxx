@@ -135,10 +135,14 @@ namespace sodium {
              * listen to streams.
              */
             std::function<void()>* listen_raw(
-                        transaction_impl* trans0,
+                        transaction_impl* trans,
                         const SODIUM_SHARED_PTR<impl::node>& target,
-                        std::function<void(const SODIUM_SHARED_PTR<impl::node>&, transaction_impl*, const light_ptr&)>* handle,
-                        bool suppressEarlierFirings) const;
+                        std::function<void(const SODIUM_SHARED_PTR<impl::node>&, transaction_impl*, const light_ptr&)>* handler,
+                        bool suppressEarlierFirings) const
+            {
+                SODIUM_SHARED_PTR<holder> h(new holder(handler));
+                return listen_impl(trans, target, h, suppressEarlierFirings);
+            }
 
             /*!
              * This is far more efficient than add_cleanup because it modifies the stream

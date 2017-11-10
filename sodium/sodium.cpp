@@ -14,19 +14,6 @@ namespace sodium {
 
     namespace impl {
 
-        /*!
-         * listen to streams.
-         */
-        std::function<void()>* stream_::listen_raw(
-                    transaction_impl* trans,
-                    const SODIUM_SHARED_PTR<impl::node>& target,
-                    std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>* handler,
-                    bool suppressEarlierFirings) const
-        {
-            SODIUM_SHARED_PTR<holder> h(new holder(handler));
-            return listen_impl(trans, target, h, suppressEarlierFirings);
-        }
-
         cell_ stream_::hold_(transaction_impl* trans, const light_ptr& initA) const
         {
             return cell_(
