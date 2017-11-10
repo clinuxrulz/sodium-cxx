@@ -14,23 +14,6 @@ namespace sodium {
 
     namespace impl {
 
-        /*!
-         * Filter this stream based on the specified predicate, passing through values
-         * where the predicate returns true.
-         */
-        stream_ stream_::filter_(transaction_impl* trans1,
-                const std::function<bool(const light_ptr&)>& pred
-            ) const
-        {
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
-            auto kill = listen_raw(trans1, std::get<1>(p),
-                    new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
-                        [pred] (const std::shared_ptr<impl::node>& target, impl::transaction_impl* trans2, const light_ptr& ptr) {
-                            if (pred(ptr)) send(target, trans2, ptr);
-                        }), false);
-            return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill);
-        }
-
         cell_impl::cell_impl()
             : updates(stream_()),
               kill(NULL)
