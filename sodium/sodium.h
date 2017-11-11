@@ -28,7 +28,7 @@
 #define __attribute__(x)
 #endif
 
-#define KILL_ONCE(ppKill) \
+#define SODIUM_KILL_ONCE(ppKill) \
     do { \
         std::function<void()>* pKill = *ppKill; \
         if (pKill != NULL) { \
@@ -274,13 +274,13 @@ namespace sodium {
                         [ppKill] (const std::shared_ptr<impl::node>& target, impl::transaction_impl* trans2, const light_ptr& ptr) {
                             if (*ppKill) {
                                 send(target, trans2, ptr);
-                                KILL_ONCE(ppKill);
+                                SODIUM_KILL_ONCE(ppKill);
                             }
                         }),
                     false);
                 return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(
                     new std::function<void()>([ppKill] () {
-                        KILL_ONCE(ppKill);
+                        SODIUM_KILL_ONCE(ppKill);
                     })
                 );
             }
@@ -1962,7 +1962,7 @@ namespace sodium {
                     [pKillInner] (const std::shared_ptr<impl::node>& target2, impl::transaction_impl* trans1, const light_ptr& pea) {
                         const stream_& ea = *pea.cast_ptr<stream_>(NULL);
                         trans1->last([pKillInner, ea, target2, trans1] () {
-                            KILL_ONCE(pKillInner);
+                            SODIUM_KILL_ONCE(pKillInner);
                             *pKillInner = ea.listen_raw(trans1, target2, NULL, true);
                         });
                     }),
@@ -1970,7 +1970,7 @@ namespace sodium {
             );
             return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(
                 new std::function<void()>([pKillInner] {
-                    KILL_ONCE(pKillInner);
+                    SODIUM_KILL_ONCE(pKillInner);
                 })
                 , killOuter);
         }
@@ -2020,14 +2020,14 @@ namespace sodium {
                         // using value().listen, and value() throws away all firings except
                         // for the last one. Therefore, anything from the old input cell
                         // that might have happened during this transaction will be suppressed.
-                        KILL_ONCE(pKillInner);
+                        SODIUM_KILL_ONCE(pKillInner);
                         const cell_& ba = *pa.cast_ptr<cell_>(NULL);
                         *pKillInner = ba.value_(trans).listen_raw(trans, target, NULL, false);
                     })
                 , false);
             return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(
                 new std::function<void()>([pKillInner] {
-                    KILL_ONCE(pKillInner);
+                    SODIUM_KILL_ONCE(pKillInner);
                 })
                 , killOuter).hold_lazy_(trans0, za);
         }
