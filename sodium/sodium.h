@@ -546,7 +546,11 @@ namespace sodium {
                 /*!
                  * For optimization, if this cell is a constant, then return its value.
                  */
-                boost::optional<light_ptr> get_constant_value() const;
+                boost::optional<light_ptr> get_constant_value() const
+                {
+                    return impl->updates.is_never() ? boost::optional<light_ptr>(impl->sample())
+                                                    : boost::optional<light_ptr>();
+                }
 #endif
 
                 stream_ value_(transaction_impl* trans) const

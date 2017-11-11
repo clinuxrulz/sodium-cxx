@@ -65,17 +65,6 @@ namespace sodium {
             return SODIUM_MAKE_TUPLE(stream_(li_stream), n1);
         }
 
-#if defined(SODIUM_CONSTANT_OPTIMIZATION)
-        /*!
-         * For optimization, if this cell is a constant, then return its value.
-         */
-        boost::optional<light_ptr> cell_::get_constant_value() const
-        {
-            return impl->updates.is_never() ? boost::optional<light_ptr>(impl->sample())
-                                            : boost::optional<light_ptr>();
-        }
-#endif
-
         struct applicative_state {
             applicative_state() : fired(false) {}
             bool fired;
