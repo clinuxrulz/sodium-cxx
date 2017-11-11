@@ -65,23 +65,6 @@ namespace sodium {
             return SODIUM_MAKE_TUPLE(stream_(li_stream), n1);
         }
 
-        stream_sink_impl::stream_sink_impl()
-        {
-        }
-
-        stream_ stream_sink_impl::construct()
-        {
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
-            this->target = SODIUM_TUPLE_GET<1>(p);
-            return SODIUM_TUPLE_GET<0>(p);
-        }
-
-        void stream_sink_impl::send(transaction_impl* trans, const light_ptr& value) const
-        {
-            sodium::impl::send(target, trans, value);
-        }
-
-
         SODIUM_SHARED_PTR<cell_impl> hold(transaction_impl* trans0, const light_ptr& initValue, const stream_& input)
         {
 #if defined(SODIUM_CONSTANT_OPTIMIZATION)

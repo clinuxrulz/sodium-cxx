@@ -1451,9 +1451,18 @@ namespace sodium {
 
     namespace impl {
         struct stream_sink_impl {
-            stream_sink_impl();
-            stream_ construct();
-            void send(transaction_impl* trans, const light_ptr& ptr) const;
+            stream_ construct()
+            {
+                SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
+                this->target = SODIUM_TUPLE_GET<1>(p);
+                return SODIUM_TUPLE_GET<0>(p);
+            }
+
+            void send(transaction_impl* trans, const light_ptr& value) const
+            {
+                sodium::impl::send(target, trans, value);
+            }
+
             SODIUM_SHARED_PTR<impl::node> target;
         };
     }
