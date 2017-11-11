@@ -1646,8 +1646,19 @@ namespace sodium {
     };
 
     namespace impl {
-        stream_ filter_optional_(transaction_impl* trans, const stream_& input,
-            const std::function<boost::optional<light_ptr>(const light_ptr&)>& f);
+        inline stream_ filter_optional_(transaction_impl* trans1, const stream_& input,
+            const std::function<boost::optional<light_ptr>(const light_ptr&)>& f)
+        {
+            auto p = impl::unsafe_new_stream();
+            auto kill = input.listen_raw(trans1, std::get<1>(p),
+                new std::function<void(const SODIUM_SHARED_PTR<impl::node>&, impl::transaction_impl*, const light_ptr&)>(
+                    [f] (const SODIUM_SHARED_PTR<impl::node>& target, impl::transaction_impl* trans2, const light_ptr& poa) {
+                        boost::optional<light_ptr> oa = f(poa);
+                        if (oa) impl::send(target, trans2, oa.get());
+                    })
+                , false);
+            return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill);
+        }
     }
 
     /*!
