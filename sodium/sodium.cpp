@@ -119,25 +119,6 @@ namespace sodium {
             return static_pointer_cast<cell_impl, cell_impl_concrete<cell_state_lazy>>(impl);
         }
 
-        cell_::cell_()
-        {
-        }
-
-        cell_::cell_(cell_impl* impl_)
-            : impl(impl_)
-        {
-        }
-
-        cell_::cell_(SODIUM_SHARED_PTR<cell_impl> impl_)
-            : impl(std::move(impl_))
-        {
-        }
-
-        cell_::cell_(light_ptr a)
-            : impl(new cell_impl_constant(std::move(a)))
-        {
-        }
-
         stream_ cell_::value_(transaction_impl* trans) const
         {
             SODIUM_TUPLE<stream_,SODIUM_SHARED_PTR<node> > p = unsafe_new_stream();

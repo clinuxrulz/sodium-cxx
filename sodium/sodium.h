@@ -526,10 +526,20 @@ namespace sodium {
         class cell_ {
             friend impl::stream_ underlying_stream(const cell_& beh);
             public:
-                cell_();
-                cell_(cell_impl* impl);
-                cell_(SODIUM_SHARED_PTR<cell_impl> impl);
-                cell_(light_ptr a);
+                cell_() = default;
+
+                cell_(cell_impl* impl)
+                    : impl(impl)
+                {}
+
+                cell_(SODIUM_SHARED_PTR<cell_impl> impl)
+                    : impl(std::move(impl))
+                {}
+
+                cell_(light_ptr a)
+                    : impl(new cell_impl_constant(std::move(a)))
+                {}
+
                 SODIUM_SHARED_PTR<impl::cell_impl> impl;
 
 #if defined(SODIUM_CONSTANT_OPTIMIZATION)
