@@ -65,22 +65,6 @@ namespace sodium {
             return SODIUM_MAKE_TUPLE(stream_(li_stream), n1);
         }
 
-        /*!
-         * Map a function over this stream to modify the output value.
-         */
-        stream_ map_(transaction_impl* trans1,
-            const std::function<light_ptr(const light_ptr&)>& f,
-            const stream_& ev)
-        {
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = impl::unsafe_new_stream();
-            auto kill = ev.listen_raw(trans1, std::get<1>(p),
-                    new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
-                        [f] (const std::shared_ptr<impl::node>& target, impl::transaction_impl* trans2, const light_ptr& ptr) {
-                            send(target, trans2, f(ptr));
-                        }), false);
-            return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(kill);
-        }
-
         cell_ map_(transaction_impl* trans,
             const std::function<light_ptr(const light_ptr&)>& f,
             const cell_& beh) {
