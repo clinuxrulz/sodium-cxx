@@ -65,34 +65,6 @@ namespace sodium {
             return SODIUM_MAKE_TUPLE(stream_(li_stream), n1);
         }
 
-        stream_ switch_s(transaction_impl* trans0, const cell_& bea)
-        {
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = unsafe_new_stream();
-            const SODIUM_SHARED_PTR<impl::node>& target1 = SODIUM_TUPLE_GET<1>(p);
-            std::shared_ptr<function<void()>*> pKillInner(new function<void()>*(NULL));
-            trans0->prioritized(target1, [pKillInner, bea, target1] (transaction_impl* trans) {
-                if (*pKillInner == NULL)
-                    *pKillInner = bea.impl->sample().cast_ptr<stream_>(NULL)->listen_raw(trans, target1, NULL, false);
-            });
-
-            auto killOuter = bea.updates_().listen_raw(trans0, target1,
-                new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
-                    [pKillInner] (const std::shared_ptr<impl::node>& target2, impl::transaction_impl* trans1, const light_ptr& pea) {
-                        const stream_& ea = *pea.cast_ptr<stream_>(NULL);
-                        trans1->last([pKillInner, ea, target2, trans1] () {
-                            KILL_ONCE(pKillInner);
-                            *pKillInner = ea.listen_raw(trans1, target2, NULL, true);
-                        });
-                    }),
-                false
-            );
-            return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(
-                new std::function<void()>([pKillInner] {
-                    KILL_ONCE(pKillInner);
-                })
-                , killOuter);
-        }
-
         cell_ switch_c(transaction_impl* trans0, const cell_& bba)
         {
             auto za = [bba] () -> light_ptr { return bba.impl->sample().cast_ptr<cell_>(NULL)->impl->sample(); };
