@@ -65,34 +65,6 @@ namespace sodium {
             return SODIUM_MAKE_TUPLE(stream_(li_stream), n1);
         }
 
-        cell_ switch_c(transaction_impl* trans0, const cell_& bba)
-        {
-            auto za = [bba] () -> light_ptr { return bba.impl->sample().cast_ptr<cell_>(NULL)->impl->sample(); };
-            SODIUM_SHARED_PTR<function<void()>*> pKillInner(new function<void()>*(NULL));
-            SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = unsafe_new_stream();
-            auto out_target = SODIUM_TUPLE_GET<1>(p);
-            auto killOuter =
-                bba.value_(trans0).listen_raw(trans0, out_target,
-                new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
-                    [pKillInner] (const std::shared_ptr<impl::node>& target, transaction_impl* trans, const light_ptr& pa) {
-                        // Note: If any switch takes place during a transaction, then the
-                        // value().listen will always cause a sample to be fetched from the
-                        // one we just switched to. The caller will be fetching our output
-                        // using value().listen, and value() throws away all firings except
-                        // for the last one. Therefore, anything from the old input cell
-                        // that might have happened during this transaction will be suppressed.
-                        KILL_ONCE(pKillInner);
-                        const cell_& ba = *pa.cast_ptr<cell_>(NULL);
-                        *pKillInner = ba.value_(trans).listen_raw(trans, target, NULL, false);
-                    })
-                , false);
-            return SODIUM_TUPLE_GET<0>(p).unsafe_add_cleanup(
-                new std::function<void()>([pKillInner] {
-                    KILL_ONCE(pKillInner);
-                })
-                , killOuter).hold_lazy_(trans0, za);
-        }
-
         stream_ filter_optional_(transaction_impl* trans1, const stream_& input,
             const std::function<boost::optional<light_ptr>(const light_ptr&)>& f)
         {
