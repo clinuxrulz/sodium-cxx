@@ -65,20 +65,6 @@ namespace sodium {
             return SODIUM_MAKE_TUPLE(stream_(li_stream), n1);
         }
 
-        stream_ cell_::value_(transaction_impl* trans) const
-        {
-            SODIUM_TUPLE<stream_,SODIUM_SHARED_PTR<node> > p = unsafe_new_stream();
-            const stream_& eSpark = std::get<0>(p);
-            const SODIUM_SHARED_PTR<node>& node = std::get<1>(p);
-            send(node, trans, light_ptr::create<unit>(unit()));
-            stream_ eInitial = eSpark.snapshot_(trans, *this,
-                [] (const light_ptr& a, const light_ptr& b) -> light_ptr {
-                    return b;
-                }
-            );
-            return eInitial.merge_(trans, impl->updates).last_firing_only_(trans);
-        }
-
 #if defined(SODIUM_CONSTANT_OPTIMIZATION)
         /*!
          * For optimization, if this cell is a constant, then return its value.

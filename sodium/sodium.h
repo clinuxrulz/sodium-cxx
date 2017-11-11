@@ -549,7 +549,20 @@ namespace sodium {
                 boost::optional<light_ptr> get_constant_value() const;
 #endif
 
-                stream_ value_(transaction_impl* trans) const;
+                stream_ value_(transaction_impl* trans) const
+                {
+                    SODIUM_TUPLE<stream_,SODIUM_SHARED_PTR<node> > p = unsafe_new_stream();
+                    const stream_& eSpark = std::get<0>(p);
+                    const SODIUM_SHARED_PTR<node>& node = std::get<1>(p);
+                    send(node, trans, light_ptr::create<unit>(unit()));
+                    stream_ eInitial = eSpark.snapshot_(trans, *this,
+                        [] (const light_ptr& a, const light_ptr& b) -> light_ptr {
+                            return b;
+                        }
+                    );
+                    return eInitial.merge_(trans, impl->updates).last_firing_only_(trans);
+                }
+
                 const stream_& updates_() const { return impl->updates; }
         };
 
