@@ -15,34 +15,6 @@ namespace sodium {
     namespace impl {
 
         /*!
-         * Function to push a value into an stream
-         */
-        void send(const SODIUM_SHARED_PTR<node>& n, transaction_impl* trans1, const light_ptr& a)
-        {
-            if (n->firings.begin() == n->firings.end())
-                trans1->last([n] () {
-                    n->firings.clear();
-                });
-            n->firings.push_front(a);
-            SODIUM_FORWARD_LIST<node::target>::iterator it = n->targets.begin();
-            while (it != n->targets.end()) {
-                node::target* f = &*it;
-                trans1->prioritized(f->n, [f, a] (transaction_impl* trans2) {
-                    trans2->inCallback++;
-                    try {
-                        ((holder*)f->h)->handle(f->n, trans2, a);
-                        trans2->inCallback--;
-                    }
-                    catch (...) {
-                        trans2->inCallback--;
-                        throw;
-                    }
-                });
-                it++;
-            }
-        }
-
-        /*!
          * Creates an stream, that values can be pushed into using impl::send(). 
          */
         SODIUM_TUPLE<stream_, SODIUM_SHARED_PTR<node> > unsafe_new_stream()
