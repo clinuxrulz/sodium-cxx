@@ -421,7 +421,7 @@ namespace sodium {
                              const std::function<void(transaction_impl*, const light_ptr&)>&)> listen_value_raw() const;
         };
 
-        SODIUM_SHARED_PTR<cell_impl> hold(transaction_impl* trans0,
+        inline SODIUM_SHARED_PTR<cell_impl> hold(transaction_impl* trans0,
                             const light_ptr& initValue,
                             const stream_& input);
         SODIUM_SHARED_PTR<cell_impl> hold_lazy(transaction_impl* trans0,
@@ -609,6 +609,37 @@ namespace sodium {
                 });
                 it++;
             }
+        }
+
+        SODIUM_SHARED_PTR<cell_impl> hold(transaction_impl* trans0, const light_ptr& initValue, const stream_& input)
+        {
+#if defined(SODIUM_CONSTANT_OPTIMIZATION)
+            if (input.is_never())
+                return SODIUM_SHARED_PTR<cell_impl>(new cell_impl_constant(initValue));
+            else {
+#endif
+                SODIUM_SHARED_PTR<cell_impl_concrete<cell_state> > impl(
+                    new cell_impl_concrete<cell_state>(input, cell_state(initValue), std::shared_ptr<cell_impl>())
+                );
+                SODIUM_WEAK_PTR<cell_impl_concrete<cell_state> > impl_weak(impl);
+                impl->kill =
+                    input.listen_raw(trans0, SODIUM_SHARED_PTR<node>(new node(SODIUM_IMPL_RANK_T_MAX)),
+                    new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
+                        [impl_weak] (const std::shared_ptr<impl::node>& target, transaction_impl* trans, const light_ptr& ptr) {
+                            SODIUM_SHARED_PTR<cell_impl_concrete<cell_state> > impl_ = impl_weak.lock();
+                            if (impl_) {
+                                bool first = !impl_->state.update;
+                                impl_->state.update = boost::optional<light_ptr>(ptr);
+                                if (first)
+                                    trans->last([impl_] () { impl_->state.finalize(); });
+                                send(target, trans, ptr);
+                            }
+                        })
+                    , false);
+                return impl;
+#if defined(SODIUM_CONSTANT_OPTIMIZATION)
+            }
+#endif
         }
     }  // end namespace impl
 
