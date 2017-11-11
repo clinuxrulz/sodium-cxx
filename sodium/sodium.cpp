@@ -65,24 +65,6 @@ namespace sodium {
             return SODIUM_MAKE_TUPLE(stream_(li_stream), n1);
         }
 
-        cell_ map_(transaction_impl* trans,
-            const std::function<light_ptr(const light_ptr&)>& f,
-            const cell_& beh) {
-#if defined(SODIUM_CONSTANT_OPTIMIZATION)
-            boost::optional<light_ptr> ca = beh.get_constant_value();
-            if (ca)
-                return cell_(f(ca.get()));
-            else {
-#endif
-                auto impl = beh.impl;
-                return map_(trans, f, beh.updates_()).hold_lazy_(trans, [f, impl] () -> light_ptr {
-                    return f(impl->sample());
-                });
-#if defined(SODIUM_CONSTANT_OPTIMIZATION)
-            }
-#endif
-        }
-
         stream_ switch_s(transaction_impl* trans0, const cell_& bea)
         {
             SODIUM_TUPLE<impl::stream_,SODIUM_SHARED_PTR<impl::node> > p = unsafe_new_stream();
