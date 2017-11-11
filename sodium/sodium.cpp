@@ -65,29 +65,6 @@ namespace sodium {
             return SODIUM_MAKE_TUPLE(stream_(li_stream), n1);
         }
 
-        SODIUM_SHARED_PTR<cell_impl> hold_lazy(transaction_impl* trans0, const std::function<light_ptr()>& initValue, const stream_& input)
-        {
-            SODIUM_SHARED_PTR<cell_impl_concrete<cell_state_lazy> > impl(
-                new cell_impl_concrete<cell_state_lazy>(input, cell_state_lazy(initValue), std::shared_ptr<cell_impl>())
-            );
-            SODIUM_WEAK_PTR<cell_impl_concrete<cell_state_lazy> > w_impl(impl);
-            impl->kill =
-                input.listen_raw(trans0, SODIUM_SHARED_PTR<node>(new node(SODIUM_IMPL_RANK_T_MAX)),
-                new std::function<void(const std::shared_ptr<impl::node>&, transaction_impl*, const light_ptr&)>(
-                    [w_impl] (const std::shared_ptr<impl::node>& target, transaction_impl* trans, const light_ptr& ptr) {
-                        SODIUM_SHARED_PTR<cell_impl_concrete<cell_state_lazy> > impl_ = w_impl.lock();
-                        if (impl_) {
-                            bool first = !impl_->state.update;
-                            impl_->state.update = boost::optional<light_ptr>(ptr);
-                            if (first)
-                                trans->last([impl_] () { impl_->state.finalize(); });
-                            send(target, trans, ptr);
-                        }
-                    })
-                , false);
-            return static_pointer_cast<cell_impl, cell_impl_concrete<cell_state_lazy>>(impl);
-        }
-
         stream_ cell_::value_(transaction_impl* trans) const
         {
             SODIUM_TUPLE<stream_,SODIUM_SHARED_PTR<node> > p = unsafe_new_stream();
