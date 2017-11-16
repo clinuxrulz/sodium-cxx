@@ -42,7 +42,6 @@ set(SODIUM_INCLUDE_FILES
 set(SODIUM_SOURCE_FILES
     ${SODIUM_BASE_DIR}/light_ptr.cpp
     ${SODIUM_BASE_DIR}/lock_pool.cpp
-    ${SODIUM_BASE_DIR}/sodium.cpp
     ${SODIUM_BASE_DIR}/time.cpp
     ${SODIUM_BASE_DIR}/transaction.cpp
     )
