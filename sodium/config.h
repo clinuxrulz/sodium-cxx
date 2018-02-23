@@ -7,6 +7,8 @@
 #ifndef _SODIUM_CONFIG_H_
 #define _SODIUM_CONFIG_H_
 
+#include <sodium/gc.h>
+
 #include <limits.h>  // for __WORDSIZE
 #if defined(SODIUM_EXTRA_INCLUDE)
 #include SODIUM_EXTRA_INCLUDE
@@ -23,9 +25,9 @@
 #define SODIUM_NODE_BITS   31
 #define SODIUM_CONSERVE_MEMORY
 #endif
-#define SODIUM_SHARED_PTR   std::shared_ptr
+#define SODIUM_SHARED_PTR   Gc
 #define SODIUM_MAKE_SHARED  std::make_shared
-#define SODIUM_WEAK_PTR     std::weak_ptr
+#define SODIUM_WEAK_PTR     GcWeak
 #define SODIUM_TUPLE        std::tuple
 #define SODIUM_MAKE_TUPLE   std::make_tuple
 #define SODIUM_TUPLE_GET    std::get
