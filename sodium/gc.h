@@ -52,7 +52,9 @@ class Gc;
 template <typename A>
 struct Trace {
     template <typename F>
-    static void trace(const A& a, F&& k);
+    static void trace(const A& a, F&& k) {
+        // XXX: This is a temporary Trace, until all the Traces get defined.
+    }
 };
 
 template <typename A>

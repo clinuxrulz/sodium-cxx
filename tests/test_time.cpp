@@ -1,3 +1,4 @@
+#include <sodium/gc.h>
 #include <sodium/sodium.h>
 #include <sodium/time.h>
 #include <queue>
@@ -7,6 +8,8 @@
 struct test_impl : sodium::timer_system_impl<int>
 {
     test_impl() : next_seq(0), now_(0) {}
+
+    virtual ~test_impl() {}
 
     struct entry {
         entry(int t_, std::function<void()> callback_, long long seq_)
@@ -73,8 +76,8 @@ struct test_impl : sodium::timer_system_impl<int>
 
 int main(int argc, char* argv[])
 {
-    std::shared_ptr<test_impl> impl(new test_impl);
-    sodium::timer_system<int> ts(impl);
+    Gc<test_impl> impl(new test_impl);
+    sodium::timer_system<int> ts(impl.static_cast_<sodium::timer_system_impl<int>>());
     sodium::cell_sink<boost::optional<int>> period(boost::optional<int>(500));
     sodium::stream<int> timer1 = sodium::periodic_timer(ts, period);
     sodium::stream<int> timer2 = sodium::periodic_timer<int>(ts, boost::optional<int>(1429));
