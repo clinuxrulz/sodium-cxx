@@ -8,7 +8,7 @@
 #include <functional>
 #include <utility>
 #include <vector>
-#include <experimental/optional>
+#include <boost/optional.hpp>
 
 enum Colour {
     Black,
@@ -138,7 +138,7 @@ public:
 
     template <class B>
     Gc<B>&& upcast() const {
-        ++_node->strong;
+        increment(this->_node);
         return Gc<B>(_node, (B*)_value);
     }
 
@@ -172,7 +172,7 @@ public:
         }
     }
 
-    std::experimental::optional<Gc<A> > upgrade() {
+    boost::optional<Gc<A> > upgrade() {
         if (_node->strong == 0) {
             return {};
         } else {

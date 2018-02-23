@@ -29,6 +29,7 @@ find_package( Boost REQUIRED )
 set(SODIUM_INCLUDE_FILES
     ${SODIUM_BASE_DIR}/config.h
     ${SODIUM_BASE_DIR}/count_set.h
+    ${SODIUM_BASE_DIR}/gc.h
     ${SODIUM_BASE_DIR}/light_ptr.h
     ${SODIUM_BASE_DIR}/lock_pool.h
     ${SODIUM_BASE_DIR}/promise.h
@@ -40,6 +41,7 @@ set(SODIUM_INCLUDE_FILES
     )
 
 set(SODIUM_SOURCE_FILES
+    ${SODIUM_BASE_DIR}/gc.cpp
     ${SODIUM_BASE_DIR}/light_ptr.cpp
     ${SODIUM_BASE_DIR}/lock_pool.cpp
     ${SODIUM_BASE_DIR}/time.cpp
