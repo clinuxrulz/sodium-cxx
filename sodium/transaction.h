@@ -9,7 +9,7 @@
 
 #include <sodium/config.h>
 #include <sodium/count_set.h>
-#include <sodium/gc.h>
+#include <bacon_gc/gc.h>
 #include <sodium/light_ptr.h>
 #include <sodium/lock_pool.h>
 #include <boost/optional.hpp>
@@ -58,7 +58,7 @@ namespace sodium {
         struct listen_impl_func {
             typedef std::function<std::function<void()>*(
                 transaction_impl*,
-                const Gc<impl::node>&,
+                const bacon_gc::Gc<impl::node>&,
                 const SODIUM_SHARED_PTR<holder>&,
                 bool)> closure;
             listen_impl_func(closure* func_)
@@ -96,7 +96,7 @@ namespace sodium {
         class holder {
             public:
                 holder(
-                    std::function<void(const Gc<impl::node>&, transaction_impl*, const light_ptr&)>* handler_
+                    std::function<void(const bacon_gc::Gc<impl::node>&, transaction_impl*, const light_ptr&)>* handler_
                 ) : handler(handler_) {}
                 ~holder() {
                     delete handler;
@@ -104,7 +104,7 @@ namespace sodium {
                 void handle(const SODIUM_SHARED_PTR<node>& target, transaction_impl* trans, const light_ptr& value) const;
 
             private:
-                std::function<void(const Gc<impl::node>&, transaction_impl*, const light_ptr&)>* handler;
+                std::function<void(const bacon_gc::Gc<impl::node>&, transaction_impl*, const light_ptr&)>* handler;
         };
 
         struct H_STREAM {};

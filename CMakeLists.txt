@@ -22,6 +22,9 @@ set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wno-deprecated-declarati
 
 set( SODIUM_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/sodium )
 
+set( GC_CXX_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gc-cxx/bacon_gc )
+set( GC_CXX_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gc-cxx )
+
 set( CMAKE_INCLUDE_CURRENT_DIR ON )
 
 find_package( Boost REQUIRED )
@@ -29,7 +32,6 @@ find_package( Boost REQUIRED )
 set(SODIUM_INCLUDE_FILES
     ${SODIUM_BASE_DIR}/config.h
     ${SODIUM_BASE_DIR}/count_set.h
-    ${SODIUM_BASE_DIR}/gc.h
     ${SODIUM_BASE_DIR}/light_ptr.h
     ${SODIUM_BASE_DIR}/lock_pool.h
     ${SODIUM_BASE_DIR}/promise.h
@@ -41,11 +43,18 @@ set(SODIUM_INCLUDE_FILES
     )
 
 set(SODIUM_SOURCE_FILES
-    ${SODIUM_BASE_DIR}/gc.cpp
     ${SODIUM_BASE_DIR}/light_ptr.cpp
     ${SODIUM_BASE_DIR}/lock_pool.cpp
     ${SODIUM_BASE_DIR}/time.cpp
     ${SODIUM_BASE_DIR}/transaction.cpp
+    )
+
+set(GC_CXX_INCLUDE_FILES
+    ${GC_CXX_BASE_DIR}/gc.h
+    )
+
+set(GC_CXX_SOURCE_FILES
+    ${GC_CXX_BASE_DIR}/gc.cpp
     )
 
 file(
@@ -53,9 +62,14 @@ file(
     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include/sodium
     )
 
-include_directories( ${CMAKE_SOURCE_DIR} ${Boost_INCLUDE_DIR} )
+file(
+    COPY ${GC_CXX_INCLUDE_FILES}
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include/bacon_gc
+    )
 
-set( ALL_SOURCES ${SODIUM_INCLUDE_FILES} ${SODIUM_SOURCE_FILES} )
+include_directories( ${CMAKE_SOURCE_DIR} ${Boost_INCLUDE_DIR} ${GC_CXX_INCLUDE_DIR} )
+
+set( ALL_SOURCES ${SODIUM_INCLUDE_FILES} ${SODIUM_SOURCE_FILES} ${GC_CXX_INCLUDE_FILES} ${GC_CXX_SOURCE_FILES} )
 
 add_library( sodium SHARED ${ALL_SOURCES} )
 add_library( libsodium STATIC ${ALL_SOURCES} )

@@ -3,7 +3,7 @@
 #ifndef _SODIUM_ROUTER_H_
 #define _SODIUM_ROUTER_H_
 
-#include <sodium/gc.h>
+#include <bacon_gc/gc.h>
 #include <sodium/sodium.h>
 #include <map>
 
@@ -81,7 +81,7 @@ namespace sodium {
                 impl->table = SODIUM_SHARED_PTR<impl::routing_table<Selector>>(new impl::routing_table<Selector>(stream, target));
                 auto table(impl->table);
                 table->kill = in.listen_raw(trans1.impl(), target,
-                    new std::function<void(const Gc<impl::node>&, impl::transaction_impl*, const light_ptr&)>(
+                    new std::function<void(const bacon_gc::Gc<impl::node>&, impl::transaction_impl*, const light_ptr&)>(
                         [f, table] (const SODIUM_SHARED_PTR<impl::node>&, impl::transaction_impl* trans2, const light_ptr& ptr) {
                             Selector sel = f(*ptr.cast_ptr<A>(NULL));
                             std::vector<SODIUM_SHARED_PTR<impl::node>> targets;
