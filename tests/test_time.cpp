@@ -1,4 +1,4 @@
-#include <sodium/gc.h>
+#include <bacon_gc/gc.h>
 #include <sodium/sodium.h>
 #include <sodium/time.h>
 #include <queue>
@@ -76,7 +76,7 @@ struct test_impl : sodium::timer_system_impl<int>
 
 int main(int argc, char* argv[])
 {
-    Gc<test_impl> impl(new test_impl);
+    bacon_gc::Gc<test_impl> impl(new test_impl);
     sodium::timer_system<int> ts(impl.static_cast_<sodium::timer_system_impl<int>>());
     sodium::cell_sink<boost::optional<int>> period(boost::optional<int>(500));
     sodium::stream<int> timer1 = sodium::periodic_timer(ts, period);

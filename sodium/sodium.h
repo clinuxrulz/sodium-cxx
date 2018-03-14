@@ -1896,7 +1896,7 @@ namespace sodium {
     template <typename A>
     class stream_loop : public stream<A>
     {
-        private:
+        public:
             struct info {
                 info(
                     const SODIUM_SHARED_PTR<std::function<void()>*>& pKill_

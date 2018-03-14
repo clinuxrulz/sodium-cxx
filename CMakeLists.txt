@@ -38,6 +38,7 @@ set(SODIUM_INCLUDE_FILES
     ${SODIUM_BASE_DIR}/router.h
     ${SODIUM_BASE_DIR}/sodium.h
     ${SODIUM_BASE_DIR}/time.h
+    ${SODIUM_BASE_DIR}/trace_impls.cpp
     ${SODIUM_BASE_DIR}/transaction.h
     ${SODIUM_BASE_DIR}/unit.h
     )
